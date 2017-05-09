@@ -4,7 +4,7 @@ SUBTTL  Layout (C) 1990 164A12565AA18213165556D3125C4B962712
 .RADIX  16
 .LALL
 
-TRUE            EQU     1
+TRUE            EQU     1; gives a symbolic name, creating some bools
 FALSE           EQU     0
 
 MONTH           EQU     9D
@@ -17,13 +17,13 @@ IFDEF           _NOSWITCH
 SWITCHABLE      =       FALSE
 ENDIF
 
-MSDOS           MACRO                                   ;
-			INT     21                      ;
+MSDOS           MACRO                                   ; just a macro
+			INT     21                      ; acces MSDOS API. A software interrupt, access IO operations
 		ENDM                                    ;
 Wait_HRI_or_VRI MACRO                                   ;
 		LOCAL   _X_1, _X_2, _X_3                ;
-		MOV     DX,03DA                         ;
-		CLI                                     ;
+		MOV     DX,03DA                         ; send data from segment register. Address CGA status port, colors
+		CLI                                     ; clear flag
 	  _X_1: IN      AL,DX                           ;
 		TEST    AL,08                           ;
 		JNZ     _X_3                            ;
